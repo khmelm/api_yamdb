@@ -11,8 +11,8 @@ class User(AbstractUser):
     USER = 'user'
     ROLES = (
         (USER, 'Пользователь'),
-        (MODERATOR, 'Администратор'),
-        (ADMIN, 'Модератор'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор'),
     )
     email = models.EmailField('Электронная почта', unique=True)
     bio = models.TextField('Биография', blank=True)
