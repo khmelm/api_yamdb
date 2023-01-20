@@ -2,7 +2,7 @@ from datetime import date
 
 from django.db import models
 
-from api.validators import validate_year
+from reviews.validators import validate_year
 
 class Category(models.Model):
     name = models.CharField(max_length=256)
@@ -26,13 +26,13 @@ class Title(models.Model):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(
         Category,
-        on_delete=models.CASCADE,
-        related_name='titles',
+        on_delete=models.SET_NULL,
+        related_name='title',
+        null=True
     )
-    genre = models.ForeignKey(
+    genre = models.ManyToManyField(
         Genre,
-        on_delete=models.CASCADE,
-        related_name='titles',
+        related_name='title'
     )
 
     def __str__(self):
