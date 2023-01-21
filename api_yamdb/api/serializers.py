@@ -24,3 +24,15 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('name', 'year', 'description', 'category', 'genre')
         model = Title
+
+
+class UserBaseSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+
+
+class UserCreateSerializer(UserBaseSerializer):
+    email = serializers.EmailField()
+
+
+class UserTokenSerializer(UserBaseSerializer):
+    confirmation_code = serializers.CharField(max_length=25)
