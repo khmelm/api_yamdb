@@ -60,3 +60,15 @@ class Review(models.Model):
     class Meta:
         unique_together = ('title', 'author')
 
+
+class Comment(models.Model):
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comment'
+    )
+    text = models.TextField('Комментарий')
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comment'
+    )
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
