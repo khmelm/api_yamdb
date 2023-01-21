@@ -1,6 +1,9 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Genre, Title
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -36,3 +39,30 @@ class UserCreateSerializer(UserBaseSerializer):
 
 class UserTokenSerializer(UserBaseSerializer):
     confirmation_code = serializers.CharField(max_length=25)
+
+
+class UsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role',
+        )
+
+
+class UserMeSerializer(UsersSerializer):
+    class Meta(UsersSerializer.Meta):
+        read_only_fields = ('role',)
+        
+
+
+class UserAdminSerializer(UsersSerializer):
+    def create(self, validated_data):
+        return User.objects.create_user(
+            **validated_data,
+            password=User.objects.make_random_password()
+        )
