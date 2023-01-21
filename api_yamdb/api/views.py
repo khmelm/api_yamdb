@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.permissions import CustomPermission
 from reviews.models import Title, Category, Genre
 
 from api.serializers import (
@@ -19,6 +20,7 @@ from api.serializers import (
     GenreSerializer,
     UserCreateSerializer,
     UserTokenSerializer,
+    ReviewSerializer
 )
 
 User = get_user_model()
@@ -107,3 +109,17 @@ class UserCreateView(APIView):
             [mail],
             fail_silently=False,
         )
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+
+    serializer_class = ReviewSerializer
+    permission_classes = (CustomPermission,)
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        return title.review
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        serializer.save(title=title, author=self.request.user)
