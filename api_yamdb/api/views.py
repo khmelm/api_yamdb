@@ -12,7 +12,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Title, Category, Genre
-from api.permissions import AdminOnlyPermissions
+from api.permissions import AdminOnlyPermission
 
 from api.serializers import (
     TitleSerializer,
@@ -130,8 +130,8 @@ class UsersMeView(APIView):
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserAdminSerializer
-    permission_classes = (AdminOnlyPermissions,)
+    permission_classes = (AdminOnlyPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
