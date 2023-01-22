@@ -14,9 +14,12 @@ class User(AbstractUser):
         (MODERATOR, 'Модератор'),
         (ADMIN, 'Администратор'),
     )
-    email = models.EmailField('Электронная почта', unique=True)
+    email = models.EmailField('Электронная почта', unique=True, max_length=254)
     bio = models.TextField('Биография', blank=True)
     role = models.CharField('Роль', max_length=25, choices=ROLES, default=USER)
+
+    class Meta:
+        ordering = ('pk',)
 
     def clean(self):
         if self.username.lower() == 'me':

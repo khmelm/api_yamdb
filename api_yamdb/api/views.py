@@ -11,7 +11,8 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.permissions import CustomPermission
+from reviews.models import Title, Category, Genre
+from api.permissions import AdminOnlyPermission, CustomPermission
 from reviews.models import Title, Category, Genre, Review
 
 from api.serializers import (
@@ -19,6 +20,8 @@ from api.serializers import (
     CategorySerializer,
     GenreSerializer,
     UserCreateSerializer,
+    UserAdminSerializer,
+    UserMeSerializer,
     UserTokenSerializer,
     ReviewSerializer,
     CommentSerializer,
@@ -110,6 +113,31 @@ class UserCreateView(APIView):
             [mail],
             fail_silently=False,
         )
+
+
+class UsersMeView(APIView):
+    def get(self, request):
+        return Response(UserMeSerializer(request.user).data)
+
+    def patch(self, request):
+        serializer = UserMeSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserAdminSerializer
+    permission_classes = (AdminOnlyPermission,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
