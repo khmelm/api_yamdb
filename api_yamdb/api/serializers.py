@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comment
 
 User = get_user_model()
 
@@ -66,3 +66,37 @@ class UserAdminSerializer(UsersSerializer):
             **validated_data,
             password=User.objects.make_random_password()
         )
+
+      
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault(),
+    )
+    # title = serializers.SlugRelatedField(
+    #     queryset=Title.objects.all(),
+    #     slug_field='name'
+    # )
+
+    class Meta:
+        fields = '__all__'
+        read_only_fields = ('title',)
+        model = Review
+
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Review.objects.all(), fields=('author', 'title')
+        #     )
+        # ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault(),
+    )
+
+    class Meta:
+        fields = '__all__'
+        read_only_fields = ('review',)
+        model = Comment
