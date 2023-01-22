@@ -28,10 +28,7 @@ class CustomPermission(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        elif request.method == 'POST':
-            return request.user.is_authenticated
-        else:
-            # нужно добавить проверку на админа, модера
-            return obj.author == request.user
+        return (
+            obj.author == request.user
+            or request.user.role in (User.ADMIN, User.MODERATOR)
+        )
