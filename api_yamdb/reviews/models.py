@@ -1,4 +1,3 @@
-from datetime import date
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -11,6 +10,11 @@ class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
+    class Meta:
+        ordering = ('pk',)
+        verbose_name = 'категория'
+        verbose_name_plural = 'категории'
+
     def __str__(self):
         return self.name
 
@@ -18,6 +22,11 @@ class Category(models.Model):
 class Genre(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
+
+    class Meta:
+        ordering = ('pk',)
+        verbose_name = 'жанр'
+        verbose_name_plural = 'жанры'
 
     def __str__(self):
         return self.name
@@ -37,6 +46,11 @@ class Title(models.Model):
         Genre,
         related_name='title'
     )
+
+    class Meta:
+        ordering = ('pk',)
+        verbose_name = 'произведение'
+        verbose_name_plural = 'произведения'
 
     def __str__(self):
         return self.name
@@ -58,6 +72,9 @@ class Review(models.Model):
     )
 
     class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'отзыв'
+        verbose_name_plural = 'отзывы'
         unique_together = ('title', 'author')
 
 
@@ -72,3 +89,8 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
+
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'комментарии'
