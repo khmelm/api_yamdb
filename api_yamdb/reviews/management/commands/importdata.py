@@ -1,9 +1,11 @@
 import csv
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 from reviews.models import Category, Comment, Genre, Review, Title
-from users.models import User
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -26,8 +28,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if not self.check_database():
-            raise CommandError('Импорт возможен только в пустую базу данных!')
+        self.check_database()
         for csv_path, import_function in self.get_import_functions():
             self.import_data(csv_path, import_function)
         if self.success:
@@ -40,14 +41,15 @@ class Command(BaseCommand):
             )
 
     def check_database(self):
-        return not any([
+        if any([
             User.objects.count(),
             Category.objects.count(),
             Genre.objects.count(),
             Title.objects.count(),
             Review.objects.count(),
             Comment.objects.count(),
-        ])
+        ]):
+            raise CommandError('Импорт возможен только в пустую базу данных!')
 
     @staticmethod
     def import_categories(row) -> None:
