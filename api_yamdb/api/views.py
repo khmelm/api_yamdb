@@ -9,8 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Avg, Count
-
+from django.db.models import Avg
 
 from api.filters import TitleFilter
 from api.permissions import (
@@ -37,7 +36,8 @@ User = get_user_model()
 
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnlyPermission,)
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(
+        rating=Avg('reviews__score')).order_by('pk')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -82,8 +82,8 @@ class UserTokenView(APIView):
             username=serializer.validated_data['username'],
         )
         if not check_password(
-            serializer.validated_data['confirmation_code'],
-            user.password,
+                serializer.validated_data['confirmation_code'],
+                user.password,
         ):
             return Response(
                 {
