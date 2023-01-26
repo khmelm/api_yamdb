@@ -1,5 +1,4 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -19,11 +18,10 @@ class User(AbstractUser):
     class Meta:
         ordering = ('pk',)
 
-    def clean(self):
-        if self.username.lower() == 'me':
-            raise ValidationError(
-                {'username': 'username не может быть `me`!'})
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_superuser
 
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR

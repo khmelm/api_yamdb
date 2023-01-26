@@ -90,7 +90,9 @@ class Comment(models.Model):
     )
     text = models.TextField('Комментарий')
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='comments',
     )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
