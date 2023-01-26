@@ -113,6 +113,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
+DOMAIN = 'yamdb.com'
+
+DEFAULT_FROM_EMAIL = f'noreply@{DOMAIN}'
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

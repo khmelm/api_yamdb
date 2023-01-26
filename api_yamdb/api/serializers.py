@@ -52,18 +52,67 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
 
 class UserBaseSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+$',
+        max_length=150,
+        required=True
+    )
 
 
 class UserCreateSerializer(UserBaseSerializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(max_length=254)
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                {'username': 'username не может быть `me`!'}
+            )
+        return value
+
+    def validate(self, attrs):
+        if User.objects.filter(
+            username=attrs.get('username'),
+            email=attrs.get('email'),
+        ):
+            return attrs
+        if User.objects.filter(username=attrs.get('username')):
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует'
+            )
+        if User.objects.filter(email=attrs.get('email')):
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return attrs
+
+
+
+
+# class UserCreateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = (
+#             'username',
+#             'email',
+#         )
+#         validators = []
+
+#     def validate_username(self, value):
+#         if value.lower() == 'me':
+#             raise serializers.ValidationError(
+#                 {'username': 'username не может быть `me`!'}
+#             )
+#         return value
+
+    
+
 
 
 class UserTokenSerializer(UserBaseSerializer):
     confirmation_code = serializers.CharField(max_length=25)
 
 
-class UsersSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -73,19 +122,6 @@ class UsersSerializer(serializers.ModelSerializer):
             'last_name',
             'bio',
             'role',
-        )
-
-
-class UserMeSerializer(UsersSerializer):
-    class Meta(UsersSerializer.Meta):
-        read_only_fields = ('role',)
-
-
-class UserAdminSerializer(UsersSerializer):
-    def create(self, validated_data):
-        return User.objects.create_user(
-            **validated_data,
-            password=User.objects.make_random_password()
         )
 
 

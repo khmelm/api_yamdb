@@ -4,8 +4,9 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -24,11 +25,11 @@ from api.serializers import (
     ReviewSerializer,
     TitleCreateSerializer,
     TitleSerializer,
-    UserAdminSerializer,
+    UserSerializer,
     UserCreateSerializer,
-    UserMeSerializer,
     UserTokenSerializer,
 )
+from api.utils import send_confirmation_code
 from reviews.models import Category, Genre, Review, Title
 
 User = get_user_model()
@@ -110,54 +111,49 @@ class UserCreateView(APIView):
         ).first()
         code = User.objects.make_random_password()
         if not user:
-            try:
-                User.objects.create_user(
-                    **serializer.validated_data,
-                    password=code,
-                )
-            except ValidationError as error:
-                return Response(error, status.HTTP_400_BAD_REQUEST)
+            User.objects.create_user(
+                **serializer.validated_data,
+                password=code,
+            )
         else:
             user.set_password(code)
             user.save()
-        self.send_confirmation_code(code, serializer.validated_data['email'])
+        send_confirmation_code(code, serializer.validated_data['email'])
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @staticmethod
-    def send_confirmation_code(code, mail):
-        send_mail(
-            'Ваш код подтверждения для входа на сайт YaMDb',
-            'Здравствуйте!\n\nВаш код подтверждения для входа на сайт YaMDb: '
-            f'{code}\n\nС наилучшими пожеланиями,\nКоманда YaMDb.',
-            'noreply@yamdb.com',
-            [mail],
-            fail_silently=False,
-        )
 
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (AdminOnlyPermission,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
-class UsersMeView(APIView):
-    def get(self, request):
-        return Response(UserMeSerializer(request.user).data)
-
-    def patch(self, request):
-        serializer = UserMeSerializer(
-            request.user,
-            data=request.data,
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        url_path='me',
+        permission_classes=[IsAuthenticated]
+    )
+    def users_me(self, request):
+        if request.method == 'GET':
+            serializer = UserSerializer(request.user)
+            return Response(serializer.data)
+        data = request.data.copy()
+        if 'role' in data:
+            data.pop('role')
+        serializer = UserSerializer(request.user,
+            data=data,
             partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
-
-class UsersViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserAdminSerializer
-    permission_classes = (AdminOnlyPermission,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
-    lookup_field = 'username'
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    def perform_create(self, serializer):
+        serializer.save(password=User.objects.make_random_password())
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
