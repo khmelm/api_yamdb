@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db.models import Avg, Count
+
 
 from api.filters import TitleFilter
 from api.permissions import (
@@ -173,12 +175,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AuthorAdminModeratorPermission, )
+    permission_classes = (AuthorAdminModeratorPermission,)
+
+    def check_correct_title_id(self, review):
+        title_id_url = self.kwargs.get('title_id')
+        title_id_database = review.title.pk
+        if int(title_id_url) != int(title_id_database):
+            raise ValidationError('Некорректный id произведения')
 
     def get_queryset(self):
         review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        self.check_correct_title_id(review)
         return review.comments.all()
 
     def perform_create(self, serializer):
         review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        self.check_correct_title_id(review)
         serializer.save(review=review, author=self.request.user)
