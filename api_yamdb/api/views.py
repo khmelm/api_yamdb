@@ -12,6 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Avg
 
 from api.filters import TitleFilter
+from api.mixins import ListCreateDestroyViewSet
 from api.permissions import (
     AdminOnlyPermission,
     AdminOrReadOnlyPermission,
@@ -23,7 +24,7 @@ from api.serializers import (
     GenreSerializer,
     ReviewSerializer,
     TitleCreateSerializer,
-    TitleSerializer,
+    TitleReadSerializer,
     UserSerializer,
     UserCreateSerializer,
     UserTokenSerializer,
@@ -38,35 +39,31 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnlyPermission,)
     queryset = Title.objects.all().annotate(
         rating=Avg('reviews__score')).order_by('pk')
-    serializer_class = TitleSerializer
+    serializer_class = TitleReadSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
-            return TitleSerializer
+            return TitleReadSerializer
         else:
             return TitleCreateSerializer
 
 
-class ListCreateDestroyViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+class CategoryViewSet(ListCreateDestroyViewSet):
     permission_classes = (AdminOrReadOnlyPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-
-
-class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
+    permission_classes = (AdminOrReadOnlyPermission,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
