@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
@@ -83,8 +82,8 @@ class UserTokenView(APIView):
             username=serializer.validated_data['username'],
         )
         if not check_password(
-                serializer.validated_data['confirmation_code'],
-                user.password,
+            serializer.validated_data['confirmation_code'],
+            user.password,
         ):
             return Response(
                 {
@@ -144,7 +143,8 @@ class UsersViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         if 'role' in data:
             data.pop('role')
-        serializer = UserSerializer(request.user,
+        serializer = UserSerializer(
+            request.user,
             data=data,
             partial=True
         )

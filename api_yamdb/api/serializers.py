@@ -21,7 +21,11 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.IntegerField(max_value=10, min_value=1, read_only=True)
+    rating = serializers.IntegerField(
+        max_value=10,
+        min_value=1,
+        read_only=True,
+    )
 
     class Meta:
         fields = (
@@ -84,28 +88,6 @@ class UserCreateSerializer(UserBaseSerializer):
                 'Пользователь с таким email уже существует'
             )
         return attrs
-
-
-
-
-# class UserCreateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = (
-#             'username',
-#             'email',
-#         )
-#         validators = []
-
-#     def validate_username(self, value):
-#         if value.lower() == 'me':
-#             raise serializers.ValidationError(
-#                 {'username': 'username не может быть `me`!'}
-#             )
-#         return value
-
-    
-
 
 
 class UserTokenSerializer(UserBaseSerializer):

@@ -1,5 +1,6 @@
 import csv
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
@@ -11,20 +12,18 @@ User = get_user_model()
 class Command(BaseCommand):
     help = 'Импорт данных из csv файла.'
     success = True
+    CSV_FILES_PATH = settings.BASE_DIR / 'static/data'
 
     @classmethod
     def get_import_functions(cls):
         return (
-            ('./api_yamdb/static/data/users.csv', cls.import_users),
-            ('./api_yamdb/static/data/category.csv', cls.import_categories),
-            ('./api_yamdb/static/data/genre.csv', cls.import_genres),
-            ('./api_yamdb/static/data/titles.csv', cls.import_titles),
-            (
-                './api_yamdb/static/data/genre_title.csv',
-                cls.import_titles_genres,
-            ),
-            ('./api_yamdb/static/data/review.csv', cls.import_reviews),
-            ('./api_yamdb/static/data/comments.csv', cls.import_comments),
+            ('users.csv', cls.import_users),
+            ('category.csv', cls.import_categories),
+            ('genre.csv', cls.import_genres),
+            ('titles.csv', cls.import_titles),
+            ('genre_title.csv', cls.import_titles_genres),
+            ('review.csv', cls.import_reviews),
+            ('comments.csv', cls.import_comments),
         )
 
     def handle(self, *args, **options):
@@ -86,8 +85,8 @@ class Command(BaseCommand):
         author = User.objects.get(pk=row.pop('author'))
         Comment.objects.create(**row, review=review, author=author)
 
-    def import_data(self, csv_path, import_function):
-        with open(csv_path, newline='') as csvfile:
+    def import_data(self, csv_file, import_function):
+        with open(self.CSV_FILES_PATH / csv_file, newline='') as csvfile:
             for row in csv.DictReader(csvfile, delimiter=',', quotechar='"'):
                 try:
                     import_function(row)

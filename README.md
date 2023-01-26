@@ -60,6 +60,12 @@ pip install -r requirements.txt
 python3 manage.py migrate
 ```
 
+Импортировать тестовые данные:
+
+```
+python3 manage.py importdata
+```
+
 Запустить проект:
 
 ```
