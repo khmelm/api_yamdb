@@ -32,7 +32,6 @@ auth_urls = [
 ]
 
 urlpatterns = [
-    # path('v1/users/me/', UsersMeView.as_view()),
     path('v1/', include(router.urls)),
     path('v1/auth/', include(auth_urls)),
 ]
