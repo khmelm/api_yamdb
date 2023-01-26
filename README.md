@@ -1,4 +1,10 @@
 ## Учебный проект "YaMDb"
+Разработали:
+- Деваев Лев
+- Пахомов Николай
+- Хмелев Михаил
+
+Ознакомиться с полной документацией вы можете по адресу ```/redoc/```
 
 ### Описание проекта:
 
@@ -63,7 +69,7 @@ python3 manage.py runserver
 ### Примеры работы сервиса:
 
 ```
-Запрос: POST http://localhost:8000/api/v1/auth/signup/
+Запрос: POST /api/v1/auth/signup/
 {
   "email": "user@example.com",
   "username": "string"
@@ -77,7 +83,7 @@ python3 manage.py runserver
 ```
 
 ```
-Запрос: GET http://localhost:8000/api/v1/titles/
+Запрос: GET /api/v1/titles/
 
 Результат:
 {
@@ -107,7 +113,7 @@ python3 manage.py runserver
 ```
 
 ```
-Запрос: GET http://localhost:8000/api/v1/titles/{title_id}/reviews/
+Запрос: GET /api/v1/titles/{title_id}/reviews/
 
 Результат:
 {
