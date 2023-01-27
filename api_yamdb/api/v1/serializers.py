@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -19,10 +18,14 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(
+        max_value=10,
+        min_value=1,
+        read_only=True,
+    )
 
     class Meta:
         fields = (
@@ -36,38 +39,64 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         model = Title
 
-    def get_rating(self, obj: Title):
-        return obj.review.aggregate(Avg('score'))['score__avg']
-
 
 class TitleCreateSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Category.objects.all())
+        slug_field='slug', queryset=Category.objects.all()
+    )
     genre = serializers.SlugRelatedField(
-        slug_field='slug', many=True, queryset=Genre.objects.all())
+        slug_field='slug', many=True, queryset=Genre.objects.all()
+    )
 
     class Meta:
         fields = ('name', 'year', 'description', 'category', 'genre')
         model = Title
 
     def to_representation(self, instance):
-        serializer = TitleSerializer(instance)
+        serializer = TitleReadSerializer(instance)
         return serializer.data
 
 
 class UserBaseSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
+    username = serializers.RegexField(
+        regex=r'^[\w.@+-]+$',
+        max_length=150,
+        required=True
+    )
 
 
 class UserCreateSerializer(UserBaseSerializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(max_length=254)
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                {'username': 'username не может быть `me`!'}
+            )
+        return value
+
+    def validate(self, attrs):
+        if User.objects.filter(
+            username=attrs.get('username'),
+            email=attrs.get('email'),
+        ):
+            return attrs
+        if User.objects.filter(username=attrs.get('username')):
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует'
+            )
+        if User.objects.filter(email=attrs.get('email')):
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return attrs
 
 
 class UserTokenSerializer(UserBaseSerializer):
     confirmation_code = serializers.CharField(max_length=25)
 
 
-class UsersSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -77,19 +106,6 @@ class UsersSerializer(serializers.ModelSerializer):
             'last_name',
             'bio',
             'role',
-        )
-
-
-class UserMeSerializer(UsersSerializer):
-    class Meta(UsersSerializer.Meta):
-        read_only_fields = ('role',)
-
-
-class UserAdminSerializer(UsersSerializer):
-    def create(self, validated_data):
-        return User.objects.create_user(
-            **validated_data,
-            password=User.objects.make_random_password()
         )
 
 
