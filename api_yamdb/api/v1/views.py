@@ -11,14 +11,14 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Avg
 
-from api.filters import TitleFilter
-from api.mixins import ListCreateDestroyViewSet
-from api.permissions import (
+from api.v1.filters import TitleFilter
+from api.v1.mixins import ListCreateDestroyViewSet
+from api.v1.permissions import (
     AdminOnlyPermission,
     AdminOrReadOnlyPermission,
     AuthorAdminModeratorPermission,
 )
-from api.serializers import (
+from api.v1.serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
@@ -29,7 +29,7 @@ from api.serializers import (
     UserCreateSerializer,
     UserTokenSerializer,
 )
-from api.utils import send_confirmation_code
+from api.v1.utils import send_confirmation_code
 from reviews.models import Category, Genre, Review, Title
 
 User = get_user_model()
@@ -156,6 +156,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (AuthorAdminModeratorPermission,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -169,11 +170,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (AuthorAdminModeratorPermission,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def check_correct_title_id(self, review):
         title_id_url = self.kwargs.get('title_id')
         title_id_database = review.title.pk
-        if int(title_id_url) != int(title_id_database):
+        if int(title_id_url) != title_id_database:
             raise ValidationError('Некорректный id произведения')
 
     def get_queryset(self):
