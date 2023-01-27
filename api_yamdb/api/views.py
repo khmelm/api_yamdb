@@ -156,6 +156,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (AuthorAdminModeratorPermission,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -169,11 +170,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (AuthorAdminModeratorPermission,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def check_correct_title_id(self, review):
         title_id_url = self.kwargs.get('title_id')
         title_id_database = review.title.pk
-        if int(title_id_url) != int(title_id_database):
+        if int(title_id_url) != title_id_database:
             raise ValidationError('Некорректный id произведения')
 
     def get_queryset(self):
