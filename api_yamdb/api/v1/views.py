@@ -11,14 +11,14 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Avg
 
-from api.filters import TitleFilter
-from api.mixins import ListCreateDestroyViewSet
-from api.permissions import (
+from api.v1.filters import TitleFilter
+from api.v1.mixins import ListCreateDestroyViewSet
+from api.v1.permissions import (
     AdminOnlyPermission,
     AdminOrReadOnlyPermission,
     AuthorAdminModeratorPermission,
 )
-from api.serializers import (
+from api.v1.serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
@@ -29,7 +29,7 @@ from api.serializers import (
     UserCreateSerializer,
     UserTokenSerializer,
 )
-from api.utils import send_confirmation_code
+from api.v1.utils import send_confirmation_code
 from reviews.models import Category, Genre, Review, Title
 
 User = get_user_model()
