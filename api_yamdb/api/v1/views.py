@@ -38,7 +38,7 @@ User = get_user_model()
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnlyPermission,)
     queryset = Title.objects.all().annotate(
-        rating=Avg('reviews__score')).order_by('pk')
+        rating=Avg('reviews__score'))
     serializer_class = TitleReadSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -46,8 +46,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return TitleReadSerializer
-        else:
-            return TitleCreateSerializer
+        return TitleCreateSerializer
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -115,7 +114,7 @@ class UserCreateView(APIView):
             user.set_password(code)
             user.save()
         send_confirmation_code(code, serializer.validated_data['email'])
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
