@@ -19,13 +19,9 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True)
-    rating = serializers.IntegerField(
-        max_value=10,
-        min_value=1,
-        read_only=True,
-    )
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = (
@@ -70,22 +66,20 @@ class UserCreateSerializer(UserBaseSerializer):
 
     def validate_username(self, value):
         if value.lower() == 'me':
-            raise serializers.ValidationError(
-                {'username': 'username не может быть `me`!'}
-            )
+            raise serializers.ValidationError('username не может быть `me`!')
         return value
 
     def validate(self, attrs):
         if User.objects.filter(
             username=attrs.get('username'),
             email=attrs.get('email'),
-        ):
+        ).exists():
             return attrs
-        if User.objects.filter(username=attrs.get('username')):
+        if User.objects.filter(username=attrs.get('username')).exists():
             raise serializers.ValidationError(
                 'Пользователь с таким username уже существует'
             )
-        if User.objects.filter(email=attrs.get('email')):
+        if User.objects.filter(email=attrs.get('email')).exists():
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует'
             )
@@ -114,6 +108,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username',
         default=serializers.CurrentUserDefault(),
     )
+    score = serializers.IntegerField(max_value=10, min_value=1)
 
     class Meta:
         fields = '__all__'
@@ -129,8 +124,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Можно оставить только один отзыв!',
             )
-        if not 1 < attrs.get('score') < 10:
-            raise serializers.ValidationError('Оценка должна быть от 1 до 10!')
         return attrs
 
 
