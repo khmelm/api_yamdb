@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
-from django.core.exceptions import ValidationError
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -9,7 +9,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Avg
 
 from api.v1.filters import TitleFilter
 from api.v1.mixins import ListCreateDestroyViewSet
@@ -25,8 +24,8 @@ from api.v1.serializers import (
     ReviewSerializer,
     TitleCreateSerializer,
     TitleReadSerializer,
-    UserSerializer,
     UserCreateSerializer,
+    UserSerializer,
     UserTokenSerializer,
 )
 from api.v1.utils import send_confirmation_code
@@ -38,7 +37,7 @@ User = get_user_model()
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnlyPermission,)
     queryset = Title.objects.all().annotate(
-        rating=Avg('reviews__score'))
+        rating=Avg('reviews__score')).order_by('pk')
     serializer_class = TitleReadSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -171,18 +170,16 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorAdminModeratorPermission,)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    def check_correct_title_id(self, review):
-        title_id_url = self.kwargs.get('title_id')
-        title_id_database = review.title.pk
-        if int(title_id_url) != title_id_database:
-            raise ValidationError('Некорректный id произведения')
-
     def get_queryset(self):
-        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
-        self.check_correct_title_id(review)
+        review = get_object_or_404(
+            Review, id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
+        )
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
-        self.check_correct_title_id(review)
+        review = get_object_or_404(
+            Review, id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
+        )
         serializer.save(review=review, author=self.request.user)
